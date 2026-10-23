@@ -17,10 +17,10 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#0f172a] text-slate-200">
+    <div className="app">
       <Navbar currentPage={currentPage} onNavigate={navigate} />
 
-      <main className="w-full">
+      <main className="app__main">
         {currentPage === 'home' ? (
           <>
             <HeroSection onGetStarted={() => navigate('checker')} />
