@@ -3,6 +3,7 @@
 export interface SymptomCondition {
   name: string;
   description: string;
+  matchPercentage?: number; // e.g., 85% match with symptom profile
 }
 
 export type RiskLevel = 'Low' | 'Medium' | 'High';
@@ -11,6 +12,8 @@ export type AgeGroup = 'Child (under 12)' | 'Teen (12-17)' | 'Adult (18-64)' | '
 
 export interface AnalysisResult {
   riskLevel: RiskLevel;
+  confidenceScore?: number; // e.g., 92% AI analysis confidence
+  riskScorePercentage?: number; // e.g., 25% severity score
   possibleConditions: SymptomCondition[];
   recommendedAction: string;
   healthTips: string[];
