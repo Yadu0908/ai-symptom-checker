@@ -867,8 +867,26 @@ a {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
 }
 
+.checker__loading-wrap {
+  width: 100%;
+  min-height: calc(100vh - 200px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.card--loading {
+  width: 100%;
+  max-width: 540px;
+  margin: auto;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45), 0 0 32px rgba(6, 182, 212, 0.12);
+  border: 1px solid rgba(6, 182, 212, 0.25);
+  animation: fadeInUp 0.4s ease;
+}
+
 /* ============================================================
-   LOADING SPINNER
+   LOADING SPINNER & RADIAL GAUGE
    ============================================================ */
 
 .spinner-wrap {
@@ -876,103 +894,109 @@ a {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 44px 24px;
-  gap: 22px;
+  padding: 48px 28px;
+  gap: 26px;
+  text-align: center;
 }
 
-.spinner-ring {
+/* Precision SVG Radial Gauge */
+.spinner-radial {
   position: relative;
-  width: 72px;
-  height: 72px;
-  flex-shrink: 0;
-}
-
-.spinner-ring--large {
-  width: 90px;
-  height: 90px;
-}
-
-.spinner-ring__outer {
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  border-top-color: var(--cyan);
-  animation: spin 1s linear infinite;
-}
-
-.spinner-ring__inner {
-  position: absolute;
-  inset: 8px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  border-top-color: var(--blue);
-  animation: spin-reverse 0.75s linear infinite;
-}
-
-.spinner-ring__center {
-  position: absolute;
-  inset: 18px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(59, 130, 246, 0.15));
+  width: 160px;
+  height: 160px;
+  margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--cyan);
 }
 
-.spinner-ring__center--percent {
-  inset: 14px;
-  background: radial-gradient(circle, rgba(15, 23, 42, 0.95), rgba(6, 182, 212, 0.12));
-  border: 1px solid var(--cyan-border);
+.spinner-radial__svg {
+  width: 160px;
+  height: 160px;
+  transform: rotate(-90deg);
+  display: block;
+}
+
+.spinner-spin-slow {
+  transform-origin: center;
+  animation: spin 12s linear infinite;
+}
+
+.spinner-radial__center {
+  position: absolute;
+  inset: 0;
   display: flex;
-  align-items: baseline;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  box-shadow: 0 0 16px rgba(6, 182, 212, 0.2);
+  text-align: center;
+  pointer-events: none;
+}
+
+.spinner-percent-val {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  line-height: 1;
 }
 
 .spinner-percent-num {
-  font-size: 1.45rem;
+  font-size: 2.6rem;
   font-weight: 800;
-  color: #67e8f9;
-  letter-spacing: -0.03em;
+  color: #ffffff;
+  letter-spacing: -0.04em;
+  text-shadow: 0 0 24px rgba(6, 182, 212, 0.7);
+  line-height: 1;
+  font-family: inherit;
 }
 
-.spinner-percent-sym {
-  font-size: 0.82rem;
+.spinner-percent-unit {
+  font-size: 1.15rem;
   font-weight: 700;
   color: var(--cyan);
   margin-left: 2px;
+  margin-top: 3px;
+  line-height: 1;
+}
+
+.spinner-scan-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: var(--cyan-light);
+  margin-top: 6px;
+  text-transform: uppercase;
+}
+
+.spinner-scan-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--cyan);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--cyan);
+  animation: pulse-dot 1.4s ease-in-out infinite;
 }
 
 .spinner-bar-track {
   width: 100%;
-  max-width: 320px;
+  max-width: 340px;
   height: 6px;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.06);
   border-radius: var(--radius-full);
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.4);
 }
 
 .spinner-bar-fill {
   height: 100%;
   border-radius: var(--radius-full);
   background: linear-gradient(90deg, var(--cyan), #3b82f6);
-  box-shadow: 0 0 10px rgba(6, 182, 212, 0.5);
-  transition: width 0.18s ease-out;
-}
-
-.spinner-pct-highlight {
-  color: var(--cyan);
-  font-weight: 700;
-}
-
-.spinner-stage-text {
-  font-size: 0.8rem;
-  color: var(--cyan-light);
-  min-height: 1.4em;
-  transition: opacity 0.2s ease;
+  box-shadow: 0 0 14px rgba(6, 182, 212, 0.6);
+  transition: width 0.22s ease-out;
 }
 
 .spinner-text {
@@ -980,15 +1004,19 @@ a {
 }
 
 .spinner-text h3 {
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 1.15rem;
+  font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+  letter-spacing: -0.01em;
 }
 
-.spinner-text p {
-  font-size: 0.8rem;
-  color: var(--text-muted);
+.spinner-stage-text {
+  font-size: 0.85rem;
+  color: var(--cyan-light);
+  min-height: 1.5em;
+  line-height: 1.5;
+  transition: opacity 0.2s ease;
 }
 
 .skeleton-lines {

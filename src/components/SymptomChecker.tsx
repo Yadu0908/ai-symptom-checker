@@ -72,24 +72,28 @@ const SymptomChecker: React.FC = () => {
       </div>
 
       <div className="checker__inner">
-        {/* Header */}
-        <div className="checker__header">
-          <div className="checker__badge">
-            <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-3-3v6M12 3C7.029 3 3 7.029 3 12s4.029 9 9 9 9-4.029 9-9-4.029-9-9-9z" />
-            </svg>
-            AI Symptom Analysis
+        {/* Header - shown only when not loading and no result */}
+        {!isLoading && !result && (
+          <div className="checker__header">
+            <div className="checker__badge">
+              <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-3-3v6M12 3C7.029 3 3 7.029 3 12s4.029 9 9 9 9-4.029 9-9-4.029-9-9-9z" />
+              </svg>
+              AI Symptom Analysis
+            </div>
+            <h1 className="checker__title">How are you feeling?</h1>
+            <p className="checker__subtitle">
+              Describe your symptoms in detail for a more accurate AI analysis.
+            </p>
           </div>
-          <h1 className="checker__title">How are you feeling?</h1>
-          <p className="checker__subtitle">
-            Describe your symptoms in detail for a more accurate AI analysis.
-          </p>
-        </div>
+        )}
 
         {/* Main content */}
         {isLoading ? (
-          <div className="card">
-            <LoadingSpinner />
+          <div className="checker__loading-wrap">
+            <div className="card card--loading">
+              <LoadingSpinner />
+            </div>
           </div>
         ) : result ? (
           <ResultCard result={result} onReset={handleReset} />
