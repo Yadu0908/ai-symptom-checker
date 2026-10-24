@@ -1,10 +1,73 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import type { AnalysisResult, RiskLevel } from '../types';
 
 interface ResultCardProps {
   result: AnalysisResult;
   onReset: () => void;
 }
+
+interface CountUpProps {
+  end: number;
+  duration?: number;
+  delay?: number;
+  suffix?: string;
+  prefix?: string;
+  className?: string;
+}
+
+const CountUp: React.FC<CountUpProps> = ({
+  end,
+  duration = 1000,
+  delay = 0,
+  suffix = '',
+  prefix = '',
+  className = '',
+}) => {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let frameId: number;
+    let startTimestamp: number | null = null;
+    let timeoutId: ReturnType<typeof setTimeout>;
+
+    const startCounting = () => {
+      const step = (timestamp: number) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const elapsed = timestamp - startTimestamp;
+        const progress = Math.min(elapsed / duration, 1);
+
+        // Smooth cubic ease-out
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        setCount(Math.round(easeOut * end));
+
+        if (progress < 1) {
+          frameId = requestAnimationFrame(step);
+        }
+      };
+
+      frameId = requestAnimationFrame(step);
+    };
+
+    if (delay > 0) {
+      timeoutId = setTimeout(startCounting, delay);
+    } else {
+      startCounting();
+    }
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      if (frameId) cancelAnimationFrame(frameId);
+    };
+  }, [end, duration, delay]);
+
+  return (
+    <span className={className}>
+      {prefix}
+      {count}
+      {suffix}
+    </span>
+  );
+};
 
 function getRiskClass(level: RiskLevel): string {
   if (level === 'Low') return 'risk-badge--low';
@@ -41,6 +104,13 @@ function RiskIcon({ level }: { level: RiskLevel }) {
 }
 
 const ResultCard: React.FC<ResultCardProps> = ({ result, onReset }) => {
+  const [hasAnimated, setHasAnimated] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setHasAnimated(true), 60);
+    return () => clearTimeout(timer);
+  }, []);
+
   const riskPercent =
     result.riskScorePercentage ??
     (result.riskLevel === 'Low' ? 24 : result.riskLevel === 'Medium' ? 62 : 88);
@@ -49,7 +119,7 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, onReset }) => {
 
   return (
     <div className="result">
-      {/* Risk header with percentage scores */}
+      {/* Risk header with animated counting scores */}
       <div className="result__header">
         <div className="result__header-top">
           <div className="result__meta">
@@ -60,26 +130,28 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, onReset }) => {
                 <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                {confidence}% AI Confidence
+                <CountUp end={confidence} duration={1100} delay={100} suffix="% AI Confidence" />
               </span>
             </div>
           </div>
           <div className="result__badges">
             <div className={`risk-badge ${getRiskClass(result.riskLevel)}`}>
               <RiskIcon level={result.riskLevel} />
-              {result.riskLevel} Risk ({riskPercent}%)
+              {result.riskLevel} Risk (
+              <CountUp end={riskPercent} duration={950} suffix="%" />
+              )
             </div>
           </div>
         </div>
         <div className="risk-bar">
           <div
             className={`risk-bar__fill ${getRiskBarClass(result.riskLevel)}`}
-            style={{ width: `${riskPercent}%` }}
+            style={{ width: hasAnimated ? `${riskPercent}%` : '0%' }}
           />
         </div>
       </div>
 
-      {/* Possible Conditions with Match Percentage */}
+      {/* Possible Conditions with Animated Match Percentage */}
       <div className="result__section">
         <div className="result__section-title">
           <div className="result__section-icon result__section-icon--cyan">
@@ -98,13 +170,15 @@ const ResultCard: React.FC<ResultCardProps> = ({ result, onReset }) => {
                 <div className="condition-body">
                   <div className="condition-header-row">
                     <p className="condition-name">{c.name}</p>
-                    <span className="condition-match-badge">{match}% Match</span>
+                    <span className="condition-match-badge">
+                      <CountUp end={match} duration={1000} delay={150 + i * 200} suffix="% Match" />
+                    </span>
                   </div>
                   <p className="condition-desc">{c.description}</p>
                   <div className="condition-bar-track">
                     <div
                       className="condition-bar-fill"
-                      style={{ width: `${match}%` }}
+                      style={{ width: hasAnimated ? `${match}%` : '0%' }}
                     />
                   </div>
                 </div>
