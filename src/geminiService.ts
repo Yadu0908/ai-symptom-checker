@@ -1,7 +1,17 @@
 import type { AgeGroup, AnalysisResult } from './types';
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${API_KEY}`;
+
+// Models ordered by priority: Primary is Gemini 3.5 Flash Lite, followed by fallbacks
+const CANDIDATE_MODELS = [
+  'gemini-3.5-flash-lite',
+  'gemini-3.5-flash',
+  'gemini-3.1-flash-lite',
+  'gemini-flash-lite-latest',
+];
+
+// Timeout before switching to the next model (8.5 seconds)
+const MODEL_TIMEOUT_MS = 8500;
 
 function buildPrompt(symptoms: string, ageGroup: AgeGroup): string {
   return `You are MediScan AI, a helpful medical information assistant. A user has described their symptoms and you need to analyze them and provide structured health guidance.
@@ -39,6 +49,65 @@ Rules:
 7. Respond ONLY with the raw JSON object.`;
 }
 
+async function requestFromModel(
+  model: string,
+  prompt: string,
+  timeoutMs: number
+): Promise<string> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [{ text: prompt }],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.3,
+          topP: 0.8,
+          maxOutputTokens: 1024,
+        },
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timer);
+
+    if (!response.ok) {
+      const errBody = await response.json().catch(() => ({}));
+      const msg =
+        (errBody as { error?: { message?: string } }).error?.message ||
+        `HTTP ${response.status} ${response.statusText}`;
+      throw new Error(`Model ${model} failed with ${msg}`);
+    }
+
+    const data = await response.json();
+    const rawText: string =
+      data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+
+    if (!rawText) {
+      throw new Error(`Model ${model} returned empty response`);
+    }
+
+    return rawText;
+  } catch (err: unknown) {
+    clearTimeout(timer);
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new Error(`Model ${model} timed out after ${timeoutMs / 1000}s`);
+    }
+    throw err;
+  }
+}
+
 export async function analyzeSymptoms(
   symptoms: string,
   ageGroup: AgeGroup
@@ -50,63 +119,41 @@ export async function analyzeSymptoms(
   }
 
   const prompt = buildPrompt(symptoms, ageGroup);
+  let lastError: Error | null = null;
 
-  const response = await fetch(API_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      contents: [
-        {
-          parts: [{ text: prompt }],
-        },
-      ],
-      generationConfig: {
-        temperature: 0.3,
-        topP: 0.8,
-        maxOutputTokens: 1024,
-      },
-    }),
-  });
+  // Try primary model (Gemini 3.5 Flash Lite), then automatically fallback if it takes extra time or fails
+  for (const model of CANDIDATE_MODELS) {
+    try {
+      const rawText = await requestFromModel(model, prompt, MODEL_TIMEOUT_MS);
 
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    const message =
-      (errorData as { error?: { message?: string } }).error?.message ||
-      `API error: ${response.status} ${response.statusText}`;
-    throw new Error(message);
+      // Strip any accidental markdown code fences
+      const cleaned = rawText
+        .replace(/^```json\s*/i, '')
+        .replace(/^```\s*/i, '')
+        .replace(/\s*```$/i, '')
+        .trim();
+
+      const parsed = JSON.parse(cleaned) as AnalysisResult;
+
+      // Validate required fields
+      if (
+        !parsed.riskLevel ||
+        !Array.isArray(parsed.possibleConditions) ||
+        !parsed.recommendedAction
+      ) {
+        throw new Error(`Invalid schema returned from ${model}`);
+      }
+
+      return parsed;
+    } catch (err) {
+      const error = err instanceof Error ? err : new Error(String(err));
+      lastError = error;
+      console.warn(`[MediScan AI] ${model} unavailable or took too long (${error.message}). Switching to next fallback model...`);
+    }
   }
 
-  const data = await response.json();
-
-  const rawText: string =
-    data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
-
-  if (!rawText) {
-    throw new Error('No response received from Gemini API.');
-  }
-
-  // Strip any accidental markdown code fences
-  const cleaned = rawText
-    .replace(/^```json\s*/i, '')
-    .replace(/^```\s*/i, '')
-    .replace(/\s*```$/i, '')
-    .trim();
-
-  let parsed: AnalysisResult;
-  try {
-    parsed = JSON.parse(cleaned) as AnalysisResult;
-  } catch {
-    throw new Error(
-      'Failed to parse AI response. Please try again.'
-    );
-  }
-
-  // Validate required fields
-  if (!parsed.riskLevel || !parsed.possibleConditions || !parsed.recommendedAction) {
-    throw new Error('Incomplete response from AI. Please try again.');
-  }
-
-  return parsed;
+  throw new Error(
+    lastError?.message ||
+      'All AI models were temporarily busy or unreachable. Please try again in a few moments.'
+  );
 }

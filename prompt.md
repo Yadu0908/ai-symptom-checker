@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document details the structured prompt sent to the **Gemini 1.5 Flash** model for symptom analysis. The prompt is carefully engineered to return a consistent, parseable JSON response.
+This document details the structured prompt sent to the **Gemini 3.5 Flash Lite** model (with automated fallback support) for symptom analysis. The prompt is carefully engineered to return a consistent, parseable JSON response.
 
 ---
 
@@ -112,7 +112,7 @@ interface GeminiResponse {
 }
 ```
 
-Endpoint: https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={VITE_GEMINI_API_KEY}
+Endpoint: https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent?key={VITE_GEMINI_API_KEY}
 
 ---
 

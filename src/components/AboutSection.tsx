@@ -30,8 +30,8 @@ const AboutSection: React.FC = () => {
             <h3>Powered by Google Gemini</h3>
             <p>
               MediScan AI harnesses the capabilities of{' '}
-              <span>Google Gemini 3.8 Flash</span> — one of the world's most advanced
-              large language models — to analyze symptom descriptions and return
+              <span>Google Gemini 3.5 Flash Lite</span> — one of Google's fastest and most responsive
+              large language models — with automated model fallback to analyze symptom descriptions and return
               structured health insights in real time.
             </p>
             <p>
@@ -55,7 +55,7 @@ const AboutSection: React.FC = () => {
                 num: '02',
                 cls: 'step-num--2',
                 title: 'AI Analysis',
-                desc: 'Your symptoms are sent to Gemini 3.8 Flash with a structured prompt that ensures consistent, medically-oriented responses.',
+                desc: 'Your symptoms are analyzed by Gemini 3.5 Flash Lite with automated model fallback to guarantee rapid, consistent responses.',
               },
               {
                 num: '03',
@@ -78,7 +78,7 @@ const AboutSection: React.FC = () => {
         {/* Stats */}
         <div className="stats-grid">
           {[
-            { icon: '⚡', value: 'Gemini 3.8', label: 'Flash Model' },
+            { icon: '⚡', value: 'Gemini 3.5', label: 'Flash Lite Model' },
             { icon: '⏱', value: '< 3s', label: 'Response Time' },
             { icon: '🛡', value: '3 Levels', label: 'Risk Assessment' },
             { icon: '🔒', value: '100%', label: 'Privacy First' },

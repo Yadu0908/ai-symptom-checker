@@ -19,7 +19,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted }) => {
         {/* Badge */}
         <div className="hero__badge fade-in-up">
           <span className="hero__badge-dot" />
-          Powered by Google Gemini 3.8 Flash
+          Powered by Google Gemini 3.5 Flash Lite
         </div>
 
         {/* Heading */}
@@ -70,7 +70,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({ onGetStarted }) => {
                 </svg>
               ),
               title: 'AI-Powered Analysis',
-              desc: 'Gemini 3.8 Flash processes your symptoms in seconds',
+              desc: 'Gemini 3.5 Flash Lite processes your symptoms in seconds',
             },
             {
               icon: (
